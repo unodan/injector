@@ -40,12 +40,12 @@ source functions.sh
 
                 [ "$?" == "0" ] && {
                 DBEXISTS=$(mysql --batch --skip-column-names -u $db_adm -p$db_adm_pwd -e "SHOW DATABASES LIKE '"$db_name"';" | grep "$db_name" > /dev/null; echo "$?")
-                        if [ $DBEXISTS -eq 0 ]; then
-                                echo "Dropping datadase "$db_name
+                        [ $DBEXISTS -eq 0 ] && {
+                                echo "Dropping datadase $db_name"
                                 do_query "DROP DATABASE $db_name;"
-                        fi
+                        }
 
-                        echo "Creating datadase "$db_name
+                        echo "Creating datadase $db_name"
                         do_query "CREATE DATABASE $db_name;"
                         do_query "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_usr'@'localhost' IDENTIFIED BY '$db_usr_pwd';"
                         do_query "FLUSH PRIVILEGES;"
