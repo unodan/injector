@@ -9,7 +9,7 @@
 # Purpose: Download a database dump file and import it into Wordpress on a new domain.
 #
 ################################################################################
-#
+#  
 index=0
 options=$@
 arguments=($options)
