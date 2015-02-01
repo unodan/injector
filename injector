@@ -4,19 +4,18 @@
 # Filename: injector
 #
 # Author: Daniel Huckson
-# Version 1.0                             
+# Version 1.0
 # Date: 2011/09/06
 # Purpose: Download a database dump file and import it into Wordpress on a new domain.
 #
 ################################################################################
-#   
+#
 index=0
 options=$@
 arguments=($options)
 for argument in $options; do
         index=`expr $index + 1`
         case $argument in
-                import) import=true ;;
                 -f) CONFIG="${arguments[index]}" ;;
         esac
 done
@@ -24,55 +23,52 @@ done
 export CONFIG;
 source functions.sh
 
-[[ $import ]] && {
-        [[ -f $CONFIG ]] && {
+[[ -f $CONFIG ]] && {
 
-# 		Get remote files
-#################################################################
-#         echo Enter password for remote site $src_url
-#        	scp "$src_usr@$src_url:$src_dir/$src_file" .
+        #               Get remote files
+        #################################################################
+#       echo Enter password for remote site $src_url
+#       cp $src_dir/$src_file .
 
-		cp $src_dir/$src_file .
+        scp "$src_usr@$src_url:$src_dir/$src_file" .
 
-                echo Finished coping achive file to `hostname`
-                echo Extracting mysql dump file from archive.
-                tar xpjf $src_file.bz2
+        echo Finished coping achive file to `hostname`
+        echo Extracting mysql dump file from archive.
+        tar xpjf $src_file.bz2
 
-                [ "$?" == "0" ] && {
-                DBEXISTS=$(mysql --batch --skip-column-names -u $db_adm -p$db_adm_pwd -e "SHOW DATABASES LIKE '"$db_name"';" | grep "$db_name" > /dev/null; echo "$?")
-                        [ $DBEXISTS -eq 0 ] && {
-                                echo "Dropping datadase $db_name"
-                                do_query "DROP DATABASE $db_name;"
-                        }
+        [ "$?" == "0" ] && {
+        DBEXISTS=$(mysql --batch --skip-column-names -u $db_adm -p$db_adm_pwd -e "SHOW DATABASES LIKE '"$db_name"';" | grep "$db_name" > /dev/null; echo "$?")
+                [ $DBEXISTS -eq 0 ] && {
+                        echo "Dropping datadase $db_name"
+                        do_query "DROP DATABASE $db_name;"
+                }
 
-                        echo "Creating datadase $db_name"
-                        do_query "CREATE DATABASE $db_name;"
-                        do_query "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_usr'@'localhost' IDENTIFIED BY '$db_usr_pwd';"
-                        do_query "FLUSH PRIVILEGES;"
+                echo "Creating datadase $db_name"
+                do_query "CREATE DATABASE $db_name;"
+                do_query "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_usr'@'localhost' IDENTIFIED BY '$db_usr_pwd';"
+                do_query "FLUSH PRIVILEGES;"
 
-                        mysql -u $db_adm -p$db_adm_pwd $db_name < $src_file.sql
-                        [[ -f .mysql.* ]] && rm .mysql.* .my.cnf.* $src_file.bz2 $src_file.sql
+                mysql -u $db_adm -p$db_adm_pwd $db_name < $src_file.sql
+                [[ -f .mysql.* ]] && rm .mysql.* .my.cnf.* $src_file.bz2 $src_file.sql
 
-                        do_query "USE $db_name; UPDATE wp_options SET option_value = REPLACE(option_value, 'www.$from_domain', 'www.$to_domain');"
-                        do_query "USE $db_name; UPDATE wp_postmeta SET meta_value = REPLACE(meta_value, 'www.$from_domain', 'www.$to_domain');"
-                        do_query "USE $db_name; UPDATE wp_posts SET post_content = REPLACE(post_content, 'www.$from_domain', 'www.$to_domain');"
-                        do_query "USE $db_name; UPDATE wp_posts SET guid = REPLACE(guid, 'www.$from_domain', 'www.$to_domain');"
-                        do_query "USE $db_name; UPDATE wp_options SET option_value = REPLACE(option_value, '//$from_domain', '//www.$to_domain');"
-                        do_query "USE $db_name; UPDATE wp_postmeta SET meta_value = REPLACE(meta_value, '//$from_domain', '//www.$to_domain');"
-                        do_query "USE $db_name; UPDATE wp_posts SET post_content = REPLACE(post_content, '//$from_domain', '//www.$to_domain');"
-                        do_query "USE $db_name; UPDATE wp_posts SET guid = REPLACE(guid, '$from_domain', 'www.$to_domain');"
-                
-			
-	                rm -f $srcfile*.sql $src_file.bz2
-		}
+                do_query "USE $db_name; UPDATE ${prefix}options SET option_value = REPLACE(option_value, 'www.$src_domain', 'www.$dst_domain');"
+                do_query "USE $db_name; UPDATE ${prefix}postmeta SET meta_value = REPLACE(meta_value, 'www.$src_domain', 'www.$dst_domain');"
+                do_query "USE $db_name; UPDATE ${prefix}posts SET post_content = REPLACE(post_content, 'www.$src_domain', 'www.$dst_domain');"
+                do_query "USE $db_name; UPDATE ${prefix}posts SET guid = REPLACE(guid, 'www.$src_domain', 'www.$dst_domain');"
+                do_query "USE $db_name; UPDATE ${prefix}options SET option_value = REPLACE(option_value, '//$src_domain', '//www.$dst_domain');"
+                do_query "USE $db_name; UPDATE ${prefix}postmeta SET meta_value = REPLACE(meta_value, '//$src_domain', '//www.$dst_domain');"
+                do_query "USE $db_name; UPDATE ${prefix}posts SET post_content = REPLACE(post_content, '//$src_domain', '//www.$dst_domain');"
+                do_query "USE $db_name; UPDATE ${prefix}posts SET guid = REPLACE(guid, '$src_domain', 'www.$dst_domain');"
 
-                echo 
-                echo Script \"$(basename $0)\" finished...!
-                echo 
-        } || {
-                echo
-                echo "Can't find the configutation file $1!"
-                echo
+                rm -f $srcfile*.sql $src_file.bz2
+                sed -i "/^\$table_prefix/ c\$table_prefix = '$prefix';"  $wp_dir /home/dan/www/$dst_domain/public_html/wp-config.php
         }
-}
 
+        echo
+        echo Script \"$(basename $0)\" finished...!
+        echo
+} || {
+        echo
+        echo "Can't find the configutation file $1!"
+        echo
+}
