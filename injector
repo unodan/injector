@@ -61,7 +61,7 @@ source functions.sh
                 do_query "USE $db_name; UPDATE ${prefix}posts SET guid = REPLACE(guid, '$src_domain', 'www.$dst_domain');"
 
                 rm -f $srcfile*.sql $src_file.bz2
-                sed -i "/^\$table_prefix/ c\$table_prefix = '$prefix';"  $wp_dir /home/dan/www/$dst_domain/public_html/wp-config.php
+                sed -i "/^\$table_prefix/ c\$table_prefix = '$prefix';"  $wp_dir
         }
 
         echo
@@ -72,3 +72,4 @@ source functions.sh
         echo "Can't find the configutation file $1!"
         echo
 }
+
