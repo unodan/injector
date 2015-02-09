@@ -55,6 +55,7 @@ source functions.sh
                 do_query "USE $db_name; UPDATE ${prefix}postmeta SET meta_value = REPLACE(meta_value, 'www.$src_domain', 'www.$dst_domain');"
                 do_query "USE $db_name; UPDATE ${prefix}posts SET post_content = REPLACE(post_content, 'www.$src_domain', 'www.$dst_domain');"
                 do_query "USE $db_name; UPDATE ${prefix}posts SET guid = REPLACE(guid, 'www.$src_domain', 'www.$dst_domain');"
+
                 do_query "USE $db_name; UPDATE ${prefix}options SET option_value = REPLACE(option_value, '//$src_domain', '//www.$dst_domain');"
                 do_query "USE $db_name; UPDATE ${prefix}postmeta SET meta_value = REPLACE(meta_value, '//$src_domain', '//www.$dst_domain');"
                 do_query "USE $db_name; UPDATE ${prefix}posts SET post_content = REPLACE(post_content, '//$src_domain', '//www.$dst_domain');"
